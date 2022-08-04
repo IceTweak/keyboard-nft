@@ -1,16 +1,21 @@
 import { useState, useEffect } from "react";
 import PrimaryButton from "../components/primary-button";
 import abi from "../utils/Keyboards.json";
+import Keyboard from "../components/keyboard";
 import { ethers } from "ethers";
 
 export default function Home() {
 
   const [ethereum, setEthereum] = useState(undefined);
   const [connectedAccount, setConnectedAccount] = useState(undefined);
-  const [keyboards, setKeyboards] = useState([]);
-  const [newKeyboard, setNewKeyboard] = useState("")
 
-  const contractAddress = "0xbAd827EA6fad693782707E1fF631A6c7BfD19eeb";
+  const [keyboards, setKeyboards] = useState([]);
+  const [newKeyboard, setNewKeyboard] = useState("");
+
+  const [keyboardsLoading, setKeyboardsLoading] = useState(false);
+
+  const contractAddress = "0xCd03527EdF1A9c38eD12e9e6Be54a6D4850ED7a1";
+
   const contractABI = abi.abi;
 
   const handleAccounts = (accounts) => {
@@ -37,13 +42,18 @@ export default function Home() {
 
   const getKeyboards = async () => {
     if (ethereum && connectAccount) {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-      const keyboardsContract = new ethers.Contract(contractAddress, contractABI, signer);
+      setKeyboardsLoading(true);
+      try {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const keyboardsContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-      const keyboards = await keyboardsContract.getKeyboards();
-      console.log('Retrieved keyboards...', keyboards)
-      setKeyboards(keyboards);
+        const keyboards = await keyboardsContract.getKeyboards();
+        console.log('Retrieved keyboards...', keyboards)
+        setKeyboards(keyboards);
+      } finally {
+        setKeyboardsLoading(false);
+      }
     }
   };
   useEffect(() => getKeyboards(), [connectedAccount])
@@ -87,25 +97,35 @@ export default function Home() {
     await getKeyboards();
   }
     
-  return (
-    <div className="flex flex-col gap-y-8">
-      <form className="flex flex-col gap-y-2">
-        <div>
-          <label htmlFor="keyboard-description" className="block text-sm font-medium text-gray-700">
-            Keyboard Description
-          </label>
+  if (keyboards.length > 0) {
+    return (
+      <div className="flex flex-col gap-4">
+        <PrimaryButton type="link" href="/create">Create a Keyboard!</PrimaryButton>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-2">
+          {keyboards.map(
+            ([kind, isPBT, filter], i) => (
+              <Keyboard key={i} kind={kind} isPBT={isPBT} filter={filter} />
+            )
+          )}
         </div>
-        <input
-          name="keyboard-type"
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-          value={newKeyboard}
-          onChange={(e) => { setNewKeyboard(e.target.value) }}
-        />
-        <PrimaryButton type="submit" onClick={submitCreate}>
-          Create Keyboard!
-        </PrimaryButton>
-      </form>
-      <div>{keyboards.map((keyboard, i) => <p key={i}>{keyboard}</p>)}</div>
+      </div>
+    )
+  };
+
+  if (keyboardsLoading) {
+    return (
+      <div className="flex flex-col gap-4">
+        <PrimaryButton type="link" href="/create">Create a Keyboard!</PrimaryButton>
+        <p>Loading Keyboards...</p>
+      </div>
+    )
+  };
+
+  // If no keyboards yet
+  return (
+    <div className="flex flex-col gap-4">
+      <PrimaryButton type="link" href="/create">Create a Keyboard!</PrimaryButton>
+      <p>No keyboards yet!</p>
     </div>
   )
 }
