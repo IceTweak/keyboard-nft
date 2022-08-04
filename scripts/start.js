@@ -7,17 +7,14 @@ async function main() {
     const keyboardsContract = await keyboardsFactory.deploy();
     console.log("Contract deployed to: ", keyboardsContract.address);
 
-    const keyboardTxn1 = await keyboardsContract.create("A really great keyboard!");
+    const keyboardTxn1 = await keyboardsContract.create(0, true, "sepia");
     await keyboardTxn1.wait();
 
-    const keyboardTxn2 = await keyboardsContract.connect(other).create("An even cool keyboard!");
+    const keyboardTxn2 = await keyboardsContract.create(1, false, "grayscale");
     await keyboardTxn2.wait();
 
     let keyboards = await keyboardsContract.getKeyboards();
     console.log("We got the keyboards!", keyboards);
-
-    keyboards = await keyboardsContract.connect(other).getKeyboards();
-    console.log("And somebody else!", keyboards);
 }
 
 main()
