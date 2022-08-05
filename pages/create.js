@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import PrimaryButton from "../components/primary-button";
 import Keyboard from "../components/keyboard";
 import abi from "../utils/Keyboards.json";
+import getKeyboardsContract from "../utils/getKeyboardsContract";
 
 export default function Create() {
-
   const [ethereum, setEthereum] = useState(undefined);
   const [connectedAccount, setConnectedAccount] = useState(undefined);
 
@@ -14,19 +14,16 @@ export default function Create() {
 
   const [keyboardKind, setKeyboardKind] = useState(0);
   const [isPBT, setIsPBT] = useState(false);
-  const [filter, setFilter] = useState('');
-
-  const contractAddress = "0xbb5542e2ED9Da4C3965b1651FdF041257a6a2eB0";
-  const contractABI = abi.abi; 
+  const [filter, setFilter] = useState("");
 
   const handleAccounts = (accounts) => {
     if (accounts.length > 0) {
-        const account = accounts[0];
-        console.log("We have an authorized account: ", account)
-        setConnectedAccount(account);
+      const account = accounts[0];
+      console.log("We have an authorized account: ", account);
+      setConnectedAccount(account);
     } else {
-        console.log("No authorized accounts yet")
-    };
+      console.log("No authorized accounts yet");
+    }
   };
 
   const getConnectedAccount = async () => {
@@ -38,13 +35,13 @@ export default function Create() {
       const accounts = await ethereum.request({ method: "eth_accounts" });
       handleAccounts(accounts);
     }
-  };        
-  
+  };
+
   useEffect(() => getConnectedAccount(), []);
 
   const connectAccount = async () => {
     if (!ethereum) {
-      alert('MetaMask is required to connect an account');
+      alert("MetaMask is required to connect an account");
       return;
     }
     const accounts = await ethereum.request({ method: "eth_requestAccounts" });
@@ -55,40 +52,49 @@ export default function Create() {
     e.preventDefault();
 
     if (!ethereum) {
-      console.error('Ethereum object is required to create a keyboard');
+      console.error("Ethereum object is required to create a keyboard");
       return;
     }
     setMining(true);
-    try{
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-      const keyboardsContract = new ethers.Contract(contractAddress, contractABI, signer);
+    try {
+      const keyboardsContract = getKeyboardsContract();
 
-      const createTxn = await keyboardsContract.create(keyboardKind, isPBT, filter)
-      console.log('Create transaction started...', createTxn.hash)
+      const createTxn = await keyboardsContract.create(
+        keyboardKind,
+        isPBT,
+        filter
+      );
+      console.log("Create transaction started...", createTxn.hash);
 
       await createTxn.wait();
-      console.log('Created keyboard!', createTxn.hash);
+      console.log("Created keyboard!", createTxn.hash);
 
-      Router.push('/');
+      Router.push("/");
     } finally {
       setMining(false);
     }
   };
 
   if (!ethereum) {
-    return <p>Please install MetaMask to connect to this site</p>
+    return <p>Please install MetaMask to connect to this site</p>;
   }
 
   if (!connectedAccount) {
-    return <PrimaryButton onClick={connectAccount}>Connect MetaMask Wallet</PrimaryButton>
+    return (
+      <PrimaryButton onClick={connectAccount}>
+        Connect MetaMask Wallet
+      </PrimaryButton>
+    );
   }
 
   return (
     <div className="flex flex-col gap-y-8">
       <form className="mt-8 flex flex-col gap-y-6">
         <div>
-          <label htmlFor="keyboard-type" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="keyboard-type"
+            className="block text-sm font-medium text-gray-700"
+          >
             Keyboard Type
           </label>
           <select
@@ -96,7 +102,9 @@ export default function Create() {
             name="keyboard-type"
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
             value={keyboardKind}
-            onChange={(e) => { setKeyboardKind(e.target.value) }}
+            onChange={(e) => {
+              setKeyboardKind(e.target.value);
+            }}
           >
             <option value="0">60%</option>
             <option value="1">75%</option>
@@ -106,7 +114,10 @@ export default function Create() {
         </div>
 
         <div>
-          <label htmlFor="keycap-type" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="keycap-type"
+            className="block text-sm font-medium text-gray-700"
+          >
             Keycap Type
           </label>
           <select
@@ -114,7 +125,9 @@ export default function Create() {
             name="keycap-type"
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
             value={isPBT ? "pbt" : "abs"}
-            onChange={(e) => { setIsPBT(e.target.value === "pbt") }}
+            onChange={(e) => {
+              setIsPBT(e.target.value === "pbt");
+            }}
           >
             <option value="abs">ABS</option>
             <option value="pbt">PBT</option>
@@ -122,14 +135,19 @@ export default function Create() {
         </div>
 
         <div>
-          <label htmlFor="filter" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="filter"
+            className="block text-sm font-medium text-gray-700"
+          >
             Filter
           </label>
           <select
             id="filter"
             name="filter"
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            onChange={(e) => { setFilter(e.target.value) }}
+            onChange={(e) => {
+              setFilter(e.target.value);
+            }}
             value={filter}
           >
             <option value="">None</option>
@@ -150,5 +168,5 @@ export default function Create() {
         <Keyboard kind={keyboardKind} isPBT={isPBT} filter={filter} />
       </div>
     </div>
-  )
+  );
 }

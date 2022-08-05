@@ -1,29 +1,20 @@
 import { useState } from "react";
 import SecondaryButton from "./secondary-button";
 import { ethers } from "ethers";
-import abi from "../utils/Keyboards.json";
 
-export default function TipButton({ ethereum, index }) {
-  const contractAddress = "0x297D3fBfF8D755cd12B322028498AF36Bf3A7490";
-  const contractABI = abi.abi;
+export default function TipButton({ keyboardsContract, index }) {
+  
 
   const [mining, setMining] = useState(false);
 
   const submitTip = async (e) => {
-    if (!ethereum) {
-      console.error("Ethereum object is required to submit a tip");
+    if (!keyboardsContract) {
+      console.error("Keyboards Contract object is required to submit a tip");
       return;
     }
 
     setMining(true);
     try {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-      const keyboardsContract = new ethers.Contract(
-        contractAddress,
-        contractABI,
-        signer
-      );
 
       const tipTxn = await keyboardsContract.tip(index, {
         value: ethers.utils.parseEther("0.000001"),
@@ -39,7 +30,7 @@ export default function TipButton({ ethereum, index }) {
 
   return (
     <SecondaryButton onClick={submitTip} disabled={mining}>
-      {mining ? "Tipping..." : "Tip 1 Finney !"}
+      {mining ? "Tipping..." : "Tip 1 finney !"}
     </SecondaryButton>
   );
 }
