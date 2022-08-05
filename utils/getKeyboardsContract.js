@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 
 import abi from "../utils/Keyboards.json";
 
-const contractAddress = "0xbb5542e2ED9Da4C3965b1651FdF041257a6a2eB0";
+const contractAddress = "0xec87371c46Ce339194541C217ECa997756655bBc";
 const contractABI = abi.abi;
 
 export default function getKeyboardsContract(ethereum) {
