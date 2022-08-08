@@ -3,50 +3,18 @@ import Router from "next/router";
 import { useState, useEffect } from "react";
 import PrimaryButton from "../components/primary-button";
 import Keyboard from "../components/keyboard";
-import abi from "../utils/Keyboards.json";
 import getKeyboardsContract from "../utils/getKeyboardsContract";
+import { useMetaMaskAccount } from "../components/meta-mask-account-provider";
 
 export default function Create() {
-  const [ethereum, setEthereum] = useState(undefined);
-  const [connectedAccount, setConnectedAccount] = useState(undefined);
+
+  const { ethereum, connectedAccount, connectAccount } = useMetaMaskAccount();
 
   const [mining, setMining] = useState(false);
 
   const [keyboardKind, setKeyboardKind] = useState(0);
   const [isPBT, setIsPBT] = useState(false);
   const [filter, setFilter] = useState("");
-
-  const handleAccounts = (accounts) => {
-    if (accounts.length > 0) {
-      const account = accounts[0];
-      console.log("We have an authorized account: ", account);
-      setConnectedAccount(account);
-    } else {
-      console.log("No authorized accounts yet");
-    }
-  };
-
-  const getConnectedAccount = async () => {
-    if (window.ethereum) {
-      setEthereum(window.ethereum);
-    }
-
-    if (ethereum) {
-      const accounts = await ethereum.request({ method: "eth_accounts" });
-      handleAccounts(accounts);
-    }
-  };
-
-  useEffect(() => getConnectedAccount(), []);
-
-  const connectAccount = async () => {
-    if (!ethereum) {
-      alert("MetaMask is required to connect an account");
-      return;
-    }
-    const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-    handleAccounts(accounts);
-  };
 
   const submitCreate = async (e) => {
     e.preventDefault();
@@ -57,7 +25,7 @@ export default function Create() {
     }
     setMining(true);
     try {
-      const keyboardsContract = getKeyboardsContract();
+      const keyboardsContract = getKeyboardsContract(ethereum);
 
       const createTxn = await keyboardsContract.create(
         keyboardKind,
